@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Network Monitor</title>
+
+<style>
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #06080d;
+    --panel: rgba(15, 20, 30, 0.78);
+    --border: rgba(255, 255, 255, 0.08);
+
+    --text: #f5f7fa;
+    --muted: #7f8999;
+
+    --blue: #4da3ff;
+    --green: #35e89a;
+    --yellow: #ffc857;
+    --red: #ff5d73;
+
+    --glow-blue: rgba(77, 163, 255, .45);
+    --glow-green: rgba(53, 232, 154, .45);
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    color: var(--text);
+
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            rgba(55, 125, 255, .16),
+            transparent 40%
+        ),
+        radial-gradient(
+            circle at 100% 100%,
+            rgba(80, 40, 255, .08),
+            transparent 35%
+        ),
+        var(--bg);
+}
+
+
+/* =========================================================
+   APP
+========================================================= */
+
+.app {
+    width: min(1450px, 94vw);
+    margin: auto;
+    padding: 45px 0 60px;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 30px;
+}
+
+.title-area h1 {
+    margin: 0;
+
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 750;
+    letter-spacing: -1.5px;
+}
+
+.title-area p {
+    margin: 8px 0 0;
+
+    color: var(--muted);
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.monitor-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 9px 15px;
+
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 10px;
+
+    background: rgba(255, 255, 255, .045);
+
+    color: #e9edf3;
+
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        transform .15s ease;
+}
+
+.monitor-btn:hover {
+    background: rgba(255, 255, 255, .08);
+    border-color: rgba(255, 255, 255, .18);
+}
+
+.monitor-btn:active {
+    transform: scale(.96);
+}
+
+.btn-icon {
+    font-size: 13px;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   LIVE STATUS
+========================================================= */
+
+.live {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding: 9px 14px;
+
+    border: 1px solid rgba(53, 232, 154, .2);
+    border-radius: 999px;
+
+    background: rgba(53, 232, 154, .06);
+
+    color: var(--green);
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.live-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: var(--green);
+
+    box-shadow:
+        0 0 0 4px rgba(53, 232, 154, .08),
+        0 0 12px var(--green);
+
+    animation: pulse 1.8s infinite;
+}
+
+
+/* =========================================================
+   PAUSED STATE
+========================================================= */
+
+.controls.paused .live {
+    border-color: rgba(255, 200, 87, .2);
+    background: rgba(255, 200, 87, .06);
+
+    color: var(--yellow);
+}
+
+.controls.paused .live-dot {
+    background: var(--yellow);
+
+    box-shadow:
+        0 0 0 4px rgba(255, 200, 87, .08),
+        0 0 12px rgba(255, 200, 87, .7);
+
+    animation: none;
+}
+
+
+/* =========================================================
+   NETWORK PANEL
+========================================================= */
+
+.network-panel {
+    position: relative;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border);
+    border-radius: 24px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(18, 25, 37, .88),
+            rgba(8, 11, 17, .92)
+        );
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, .35),
+        inset 0 1px rgba(255, 255, 255, .03);
+}
+
+
+/* =========================================================
+   BACKGROUND GRID
+========================================================= */
+
+.network-panel::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background-image:
+        linear-gradient(
+            rgba(255,255,255,.018) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.018) 1px,
+            transparent 1px
+        );
+
+    background-size: 32px 32px;
+
+    mask-image:
+        linear-gradient(
+            to bottom,
+            black,
+            transparent 90%
+        );
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   SVG
+========================================================= */
+
+.network {
+    width: 100%;
+    display: block;
+}
+
+svg {
+    width: 100%;
+    height: auto;
+
+    min-height: 650px;
+
+    display: block;
+}
+
+
+/* =========================================================
+   CONNECTIONS
+========================================================= */
+
+.connection {
+    stroke: rgba(110, 135, 170, .18);
+    stroke-width: 2;
+}
+
+.connection-active {
+    stroke: rgba(77, 163, 255, .35);
+    stroke-width: 2;
+
+    stroke-dasharray: 5 9;
+
+    animation:
+        dash 2.5s linear infinite;
+}
+
+
+/* =========================================================
+   USER NODE
+========================================================= */
+
+.user-ring {
+    fill: none;
+
+    stroke: rgba(77, 163, 255, .15);
+    stroke-width: 2;
+
+    animation:
+        ringPulse 2.5s infinite;
+}
+
+.user-node {
+    fill: #101b2b;
+
+    stroke: var(--blue);
+    stroke-width: 2;
+
+    filter:
+        drop-shadow(
+            0 0 18px var(--glow-blue)
+        );
+}
+
+.user-text {
+    fill: white;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    text-anchor: middle;
+}
+
+.user-subtext {
+    fill: var(--muted);
+
+    font-size: 11px;
+
+    text-anchor: middle;
+}
+
+
+/* =========================================================
+   WEBSITE NODES
+========================================================= */
+
+.site-node {
+    fill: #0d131d;
+
+    stroke: rgba(255,255,255,.12);
+    stroke-width: 1.5;
+
+    transition:
+        stroke .25s,
+        filter .25s;
+}
+
+.site-node.online {
+    stroke: var(--green);
+
+    filter:
+        drop-shadow(
+            0 0 10px var(--glow-green)
+        );
+}
+
+.site-node.slow {
+    stroke: var(--yellow);
+}
+
+.site-node.offline {
+    stroke: var(--red);
+
+    filter:
+        drop-shadow(
+            0 0 10px rgba(255,93,115,.3)
+        );
+}
+
+
+/* =========================================================
+   WEBSITE TEXT
+========================================================= */
+
+.site-name {
+    fill: #eef2f7;
+
+    font-size: 13px;
+    font-weight: 650;
+
+    text-anchor: middle;
+}
+
+.site-ping {
+    fill: var(--muted);
+
+    font-size: 11px;
+
+    text-anchor: middle;
+}
+
+
+/* =========================================================
+   PACKETS
+========================================================= */
+
+.packet {
+    fill: #65b7ff;
+
+    filter:
+        drop-shadow(
+            0 0 6px #4da3ff
+        );
+}
+
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+.stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    border-top: 1px solid var(--border);
+}
+
+.stat {
+    padding: 20px 24px;
+
+    border-right:
+        1px solid var(--border);
+}
+
+.stat:last-child {
+    border-right: 0;
+}
+
+.stat-label {
+    color: var(--muted);
+
+    font-size: 11px;
+    text-transform: uppercase;
+
+    letter-spacing: .7px;
+}
+
+.stat-value {
+    margin-top: 5px;
+
+    font-size: 22px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(.65);
+        opacity: .55;
+    }
+}
+
+@keyframes ringPulse {
+    0%, 100% {
+        opacity: .25;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: .7;
+        transform: scale(1.06);
+    }
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: -28;
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .app {
+        width: 96vw;
+        padding-top: 25px;
+    }
+
+    .header {
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .controls {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .live {
+        font-size: 10px;
+        padding: 7px 10px;
+    }
+
+    svg {
+        min-height: 500px;
+    }
+
+    .stats {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .stat:nth-child(2) {
+        border-right: 0;
+    }
+
+    .stat:nth-child(-n+2) {
+        border-bottom:
+            1px solid var(--border);
+    }
+}
+
+@media (max-width: 500px) {
+
+    .header {
+        flex-direction: column;
+    }
+
+    .controls {
+        width: 100%;
+
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .title-area h1 {
+        font-size: 30px;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat {
+        border-right: 0;
+        border-bottom:
+            1px solid var(--border);
+    }
+
+    .stat:last-child {
+        border-bottom: 0;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="header">
+
+        <div class="title-area">
+
+            <h1>
+                Network Monitor
+            </h1>
+
+            <p>
+                Browser-side latency to popular internet services
+            </p>
+
+        </div>
+
+
+        <div class="controls">
+
+            <button
+                id="monitor-toggle"
+                class="monitor-btn"
+                type="button"
+            >
+                <span class="btn-icon">
+                    Ⅱ
+                </span>
+
+                <span id="monitor-text">
+                    Pause
+                </span>
+            </button>
+
+
+            <div
+                class="live"
+                id="live-indicator"
+            >
+                <span class="live-dot"></span>
+
+                LIVE MONITORING
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         NETWORK PANEL
+    ====================================================== -->
+
+    <section class="network-panel">
+
+
+        <svg
+            class="network"
+            viewBox="0 0 1200 700"
+            preserveAspectRatio="xMidYMid meet"
+        >
+
+
+            <!-- =================================================
+                 CONNECTION LINES
+            ================================================== -->
+
+            <g id="connections">
+
+                <line
+                    class="connection"
+                    x1="600"
+                    y1="303"
+                    x2="600"
+                    y2="108"
+                />
+
+                <line
+                    class="connection"
+                    x1="555"
+                    y1="330"
+                    x2="258"
+                    y2="150"
+                />
+
+                <line
+                    class="connection"
+                    x1="555"
+                    y1="370"
+                    x2="258"
+                    y2="550"
+                />
+
+                <line
+                    class="connection"
+                    x1="645"
+                    y1="330"
+                    x2="942"
+                    y2="150"
+                />
+
+                <line
+                    class="connection"
+                    x1="645"
+                    y1="370"
+                    x2="942"
+                    y2="550"
+                />
+
+                <line
+                    class="connection"
+                    x1="553"
+                    y1="350"
+                    x2="188"
+                    y2="350"
+                />
+
+                <line
+                    class="connection"
+                    x1="647"
+                    y1="350"
+                    x2="1012"
+                    y2="350"
+                />
+
+                <line
+                    class="connection"
+                    x1="580"
+                    y1="315"
+                    x2="420"
+                    y2="108"
+                />
+
+                <line
+                    class="connection"
+                    x1="620"
+                    y1="315"
+                    x2="780"
+                    y2="108"
+                />
+
+                <line
+                    class="connection"
+                    x1="580"
+                    y1="385"
+                    x2="420"
+                    y2="592"
+                />
+
+                <line
+                    class="connection"
+                    x1="620"
+                    y1="385"
+                    x2="780"
+                    y2="592"
+                />
+
+            </g>
+
+
+            <!-- =================================================
+                 ACTIVE CONNECTIONS
+            ================================================== -->
+
+            <g>
+
+                <line
+                    class="connection-active"
+                    x1="600"
+                    y1="303"
+                    x2="600"
+                    y2="108"
+                />
+
+                <line
+                    class="connection-active"
+                    x1="555"
+                    y1="330"
+                    x2="258"
+                    y2="150"
+                />
+
+                <line
+                    class="connection-active"
+                    x1="645"
+                    y1="330"
+                    x2="942"
+                    y2="150"
+                />
+
+                <line
+                    class="connection-active"
+                    x1="555"
+                    y1="370"
+                    x2="258"
+                    y2="550"
+                />
+
+                <line
+                    class="connection-active"
+                    x1="645"
+                    y1="370"
+                    x2="942"
+                    y2="550"
+                />
+
+            </g>
+
+
+            <!-- =================================================
+                 ANIMATED PACKETS
+            ================================================== -->
+
+            <circle
+                class="packet"
+                r="5"
+            >
+                <animateMotion
+                    dur="1.4s"
+                    repeatCount="indefinite"
+                    path="M600 303 L600 108"
+                />
+            </circle>
+
+
+            <circle
+                class="packet"
+                r="5"
+            >
+                <animateMotion
+                    dur="1.7s"
+                    repeatCount="indefinite"
+                    path="M555 330 L258 150"
+                />
+            </circle>
+
+
+            <circle
+                class="packet"
+                r="5"
+            >
+                <animateMotion
+                    dur="1.9s"
+                    repeatCount="indefinite"
+                    path="M645 330 L942 150"
+                />
+            </circle>
+
+
+            <circle
+                class="packet"
+                r="2"
+            >
+                <animateMotion
+                    dur="2.0s"
+                    repeatCount="indefinite"
+                    path="M555 370 L258 550"
+                />
+            </circle>
+
+
+            <circle
+                class="packet"
+                r="5"
+            >
+                <animateMotion
+                    dur="2.2s"
+                    repeatCount="indefinite"
+                    path="M645 370 L942 550"
+                />
+            </circle>
+
+
+            <!-- =================================================
+                 USER
+            ================================================== -->
+
+            <circle
+                class="user-ring"
+                cx="600"
+                cy="350"
+                r="65"
+            />
+
+
+            <circle
+                class="user-node"
+                cx="600"
+                cy="350"
+                r="47"
+            />
+
+
+            <text
+                class="user-text"
+                x="600"
+                y="348"
+            >
+                YOU
+            </text>
+
+
+            <text
+                class="user-subtext"
+                x="600"
+                y="368"
+            >
+                BROWSER
+            </text>
+
+
+
+            <!-- =================================================
+                 CLOUDFLARE
+            ================================================== -->
+
+            <g id="node-cloudflare">
+
+                <circle
+                    class="site-node"
+                    cx="600"
+                    cy="70"
+                    r="38"
+                />
+
+                <text
+                    class="site-name"
+                    x="600"
+                    y="66"
+                >
+                    Cloudflare
+                </text>
+
+                <text
+                    class="site-ping"
+                    x="600"
+                    y="84"
+                    id="ping-cloudflare"
+                >
+                    --
+                </text>
+
+            </g>
+
+
+
+            <!-- =================================================
+                 GOOGLE
+            ================================================== -->
+
+            <g id="node-google">
+
+                <circle
+                    class="site-node"
+                    cx="220"
+                    cy="120"
+                    r="38"
+                />
+
+                <text
+                    class="site-name"
+                    x="220"
+                    y="116"
+                >
+                    Google
+                </text>
+
+                <text
+                    class="site-ping"
+                    x="220"
+                    y="134"
+                    id="ping-google"
+                >
+                    --
+                </text>
+
+            </g>
+
+
+
+            <!-- =================================================
+                 GITHUB
+            ================================================== -->
+
+            <g id="node-github">
+
+                <circle
+                    class="site-node"
+                    cx="220"
+                    cy="580"
+                    r="38"
+                />
+
+                <text
+                    class="site-name"
+                    x="220"
+                    y="576"
+                >
+                    GitHub
+                </text>
+
+                <text
+                    class="site-ping"
+                    x="220"
+                    y="594"
+                    id="ping-github"
+                >
+                    --
+                </text>
+
+            </g>
+
+
+
+            <!-- =================================================
+                 DISCORD
+            ================================================== -->
+
+            <g id="node-discord">
+
+                <circle
+                    class="site-node"
+                    cx="980"
+                    cy="120"
+                    r="38"
+                />
+
+                <text
+                    class="site-name"
+                    x="980"
+                    y="116"
+                >
+                    Discord
+                </text>
+
+                <text
+                    class="site-ping"
+                    x="980"
+                    y="134"
+                    id="ping-discord"
+                >
+                    --
+                </text>
+
+            </g>
+
+
+
+            <!-- =================================================
+                 WIKIPEDIA
+            ================================================== -->
+
+            <g id="node-wikipedia">
+
+                <circle
+                    class="site-node"
+                    cx="980"
+                    cy="580"
+                    r="38"
+                />
+
+                <text
+                    class="site-name"
+                    x="980"
+                    y="576"
+                >
+                    Wikipedia
+                </text>
+
+                <text
+                    class="site-ping"
+                    x="980"
+                    y="594"
+                    id="ping-wikipedia"
+                >
+                    --
+                </text>
+
+            </g>
+
+
+
+            <!-- =================================================
+                 MICROSOFT
+            ================================================== -->
+
+            <g id="node-microsoft">
+
+                <circle
+                    class="site-node"
+                    cx="420"
+                    cy="70"
+                    r="38"
+                />
+
+                <text
+                    class="site-name"
+                    x="420"
+                    y="66"
+                >
+                    Microsoft
+                </text>
+
+                <text
+                    class="site-ping"
+                    x="420"
+                    y="84"
+                    id="ping-microsoft"
+                >
+                    --
+                </text>
+
+            </g>
+
+
+
+            <!-- =================================================
+                 APPLE
+            ================================================== -->
+
+            <g id="node-apple">
+
+                <circle
+                    class="site-node"
+                    cx="780"
+                    cy="70"
+                    r="38"
+                />
+
+                <text
+                    class="site-name"
+                    x="780"
+                    y="66"
+                >
+                    Apple
+                </text>
+
+                <text
+                    class="site-ping"
+                    x="780"
+                    y="84"
+                    id="ping-apple"
+                >
+                    --
+                </text>
+
+            </g>
+
+
+
+            <!-- =================================================
+                 AMAZON
+            ================================================== -->
+
+            <g id="node-amazon">
+
+                <circle
+                    class="site-node"
+                    cx="420"
+                    cy="630"
+                    r="38"
+                />
+
+                <text
+                    class="site-name"
+                    x="420"
+                    y="626"
+                >
+                    Amazon
+                </text>
+
+                <text
+                    class="site-ping"
+                    x="420"
+                    y="644"
+                    id="ping-amazon"
+                >
+                    --
+                </text>
+
+            </g>
+
+
+
+            <!-- =================================================
+                 OPENAI
+            ================================================== -->
+
+            <g id="node-openai">
+
+                <circle
+                    class="site-node"
+                    cx="780"
+                    cy="630"
+                    r="38"
+                />
+
+                <text
+                    class="site-name"
+                    x="780"
+                    y="626"
+                >
+                    OpenAI
+                </text>
+
+                <text
+                    class="site-ping"
+                    x="780"
+                    y="644"
+                    id="ping-openai"
+                >
+                    --
+                </text>
+
+            </g>
+
+        </svg>
+
+
+
+        <!-- =====================================================
+             STATISTICS
+        ====================================================== -->
+
+        <div class="stats">
+
+            <div class="stat">
+
+                <div class="stat-label">
+                    Online
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="online-count"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-label">
+                    Average Latency
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="average-ping"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-label">
+                    Fastest
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="fastest-ping"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-label">
+                    Last Check
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="last-check"
+                >
+                    --
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+
+<script>
+
+/* =========================================================
+   TARGETS
+
+   These requests are made directly from the USER'S
+   BROWSER.
+
+   The Cloudflare Worker/server is NOT performing
+   these latency tests.
+========================================================= */
+
+const targets = {
+
+    cloudflare:
+        "https://www.cloudflare.com/cdn-cgi/trace",
+
+    google:
+        "https://www.google.com/favicon.ico",
+
+    github:
+        "https://github.com/favicon.ico",
+
+    discord:
+        "https://discord.com/assets/icon-192.png",
+
+    wikipedia:
+        "https://www.wikipedia.org/static/favicon/wikipedia.ico",
+
+    microsoft:
+        "https://www.microsoft.com/favicon.ico",
+
+    apple:
+        "https://www.apple.com/favicon.ico",
+
+    amazon:
+        "https://www.amazon.com/favicon.ico",
+
+    openai:
+        "https://openai.com/favicon.ico"
+};
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let monitoring = true;
+
+let monitorTimer = null;
+
+const results = {};
+
+
+/* =========================================================
+   PING ONE TARGET
+========================================================= */
+
+async function ping(name, url) {
+
+    const node =
+        document.querySelector(
+            `#node-${name} .site-node`
+        );
+
+    const pingElement =
+        document.getElementById(
+            `ping-${name}`
+        );
+
+    const start =
+        performance.now();
+
+
+    try {
+
+        await fetch(
+            url + "?_=" + Date.now(),
+            {
+                method: "GET",
+
+                mode: "no-cors",
+
+                cache: "no-store"
+            }
+        );
+
+
+        const latency =
+            Math.round(
+                performance.now() - start
+            );
+
+
+        results[name] = latency;
+
+
+        /* Remove previous state */
+
+        node.classList.remove(
+            "offline",
+            "slow",
+            "online"
+        );
+
+
+        /* Determine latency status */
+
+        if (latency < 120) {
+
+            node.classList.add(
+                "online"
+            );
+
+        } else if (latency < 300) {
+
+            node.classList.add(
+                "slow"
+            );
+
+        } else {
+
+            node.classList.add(
+                "offline"
+            );
+        }
+
+
+        pingElement.textContent =
+            latency + " ms";
+
+
+        updateStats();
+
+
+    } catch (error) {
+
+        delete results[name];
+
+
+        node.classList.remove(
+            "online",
+            "slow"
+        );
+
+
+        node.classList.add(
+            "offline"
+        );
+
+
+        pingElement.textContent =
+            "TIMEOUT";
+
+
+        updateStats();
+    }
+}
+
+
+/* =========================================================
+   PING ALL
+========================================================= */
+
+async function pingAll() {
+
+    /*
+        Don't perform tests while paused.
+    */
+
+    if (!monitoring) {
+        return;
+    }
+
+
+    const requests =
+        Object.entries(targets)
+            .map(
+                ([name, url]) =>
+                    ping(name, url)
+            );
+
+
+    /*
+        Run all requests at the same time.
+    */
+
+    await Promise.allSettled(
+        requests
+    );
+
+
+    /*
+        Update timestamp.
+    */
+
+    document.getElementById(
+        "last-check"
+    ).textContent =
+        new Date().toLocaleTimeString(
+            [],
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
+}
+
+
+/* =========================================================
+   UPDATE STATISTICS
+========================================================= */
+
+function updateStats() {
+
+    const values =
+        Object.values(results);
+
+
+    const total =
+        Object.keys(targets).length;
+
+
+    const online =
+        values.length;
+
+
+    document.getElementById(
+        "online-count"
+    ).textContent =
+        `${online}/${total}`;
+
+
+    if (!values.length) {
+
+        document.getElementById(
+            "average-ping"
+        ).textContent =
+            "--";
+
+        document.getElementById(
+            "fastest-ping"
+        ).textContent =
+            "--";
+
+        return;
+    }
+
+
+    const average =
+        Math.round(
+            values.reduce(
+                (sum, value) =>
+                    sum + value,
+                0
+            ) / values.length
+        );
+
+
+    const fastest =
+        Math.min(...values);
+
+
+    document.getElementById(
+        "average-ping"
+    ).textContent =
+        average + " ms";
+
+
+    document.getElementById(
+        "fastest-ping"
+    ).textContent =
+        fastest + " ms";
+}
+
+
+/* =========================================================
+   START MONITORING
+========================================================= */
+
+function startMonitoring() {
+
+    if (monitoring) {
+        return;
+    }
+
+
+    monitoring = true;
+
+
+    const button =
+        document.getElementById(
+            "monitor-toggle"
+        );
+
+
+    const text =
+        document.getElementById(
+            "monitor-text"
+        );
+
+
+    const icon =
+        button.querySelector(
+            ".btn-icon"
+        );
+
+
+    const controls =
+        document.querySelector(
+            ".controls"
+        );
+
+
+    const live =
+        document.getElementById(
+            "live-indicator"
+        );
+
+
+    /*
+        Update button.
+    */
+
+    text.textContent =
+        "Pause";
+
+    icon.textContent =
+        "Ⅱ";
+
+
+    /*
+        Update controls.
+    */
+
+    controls.classList.remove(
+        "paused"
+    );
+
+
+    /*
+        Update live indicator.
+    */
+
+    live.innerHTML = `
+        <span class="live-dot"></span>
+        LIVE MONITORING
+    `;
+
+
+    /*
+        Immediately perform a fresh check.
+    */
+
+    pingAll();
+
+
+    /*
+        Resume automatic checks.
+    */
+
+    monitorTimer =
+        setInterval(
+            pingAll,
+            5000
+        );
+}
+
+
+/* =========================================================
+   PAUSE MONITORING
+========================================================= */
+
+function pauseMonitoring() {
+
+    monitoring = false;
+
+
+    /*
+        Stop timer.
+    */
+
+    if (monitorTimer) {
+
+        clearInterval(
+            monitorTimer
+        );
+
+        monitorTimer = null;
+    }
+
+
+    const button =
+        document.getElementById(
+            "monitor-toggle"
+        );
+
+
+    const text =
+        document.getElementById(
+            "monitor-text"
+        );
+
+
+    const icon =
+        button.querySelector(
+            ".btn-icon"
+        );
+
+
+    const controls =
+        document.querySelector(
+            ".controls"
+        );
+
+
+    const live =
+        document.getElementById(
+            "live-indicator"
+        );
+
+
+    /*
+        Update button.
+    */
+
+    text.textContent =
+        "Start";
+
+    icon.textContent =
+        "▶";
+
+
+    /*
+        Update controls.
+    */
+
+    controls.classList.add(
+        "paused"
+    );
+
+
+    /*
+        Update status.
+    */
+
+    live.innerHTML = `
+        <span class="live-dot"></span>
+        MONITORING PAUSED
+    `;
+}
+
+
+/* =========================================================
+   START / PAUSE BUTTON
+========================================================= */
+
+document
+    .getElementById(
+        "monitor-toggle"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            if (monitoring) {
+
+                pauseMonitoring();
+
+            } else {
+
+                startMonitoring();
+
+            }
+        }
+    );
+
+
+/* =========================================================
+   INITIAL START
+========================================================= */
+
+pingAll();
+
+
+monitorTimer =
+    setInterval(
+        pingAll,
+        5000
+    );
+
+</script>
+
+</body>
+</html>
