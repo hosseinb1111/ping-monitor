@@ -4,6 +4,11 @@
 ![No backend](https://img.shields.io/badge/backend-none-10b981)
 ![No build step](https://img.shields.io/badge/build%20step-none-10b981)
 
+## 🌐 Live Demo
+
+- **Cloudflare Worker:** `https://pinging.ai09.workers.dev/`
+- **Standalone:** `https://hosseinb1111.github.io/ping-monitor/`
+
 ![Ping Monitor Screenshot](screenshot.png)
 
 A single-page dashboard that pings a list of popular websites straight from
