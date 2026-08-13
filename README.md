@@ -20,10 +20,6 @@ It ships in two forms that look and behave identically: a Cloudflare Worker
 you can deploy in a minute, and a plain `index.html` you can open directly
 or drop on any static host.
 
-Live demo:
-
-- Cloudflare Worker Demo: `<add your deployed worker URL here>`
-- Standalone Demo: `<add your static hosting URL here>`
 
 ## ✨ Features
 
