@@ -194,10 +194,11 @@ want to keep them in sync.
 
 ```
 ping-monitor/
-├── worker.js    Cloudflare Worker — serves the app as an HTML response
-├── index.html   Standalone version — the same app as a static file
-├── README.md    This file
-└── LICENSE      MIT License
+├── worker.js       Cloudflare Worker — serves the app as an HTML response
+├── index.html      Standalone version — the same app as a static file
+├── screenshot.png  Preview image used in this README
+├── README.md       This file
+└── LICENSE         MIT License
 ```
 
 ## ♿ Accessibility
