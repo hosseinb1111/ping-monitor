@@ -6,7 +6,7 @@
 
 ## 🌐 Live Demo
 
-- **Cloudflare Worker:** `https://pinging.ai09.workers.dev/`
+- **Cloudflare Worker:** `https://pinging.hosseinseyedbagheri.workers.dev/`
 - **Standalone:** `https://hosseinb1111.github.io/ping-monitor/`
 
 ![Ping Monitor Screenshot](screenshot.png)
