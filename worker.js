@@ -19,7 +19,7 @@ export default {
   name="description"
   content="Browser-side network latency monitor"
 >
-
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070b12'/%3E%3Cpath d='M10 34h10l5-16 9 30 6-18h14' fill='none' stroke='%2355e6ff' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='10' cy='34' r='3' fill='%2355e6ff'/%3E%3Ccircle cx='54' cy='30' r='3' fill='%239d8cff'/%3E%3C/svg%3E">
 <link
   rel="icon"
   href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236366f1'/%3E%3Ctext x='50' y='70' text-anchor='middle' font-size='58'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E"
